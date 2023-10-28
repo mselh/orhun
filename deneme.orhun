@@ -1,0 +1,20 @@
+degişken bayrak = yanlış
+degişken no = 2
+degişken no2 = no + 3
+
+no = 14
+yaz no
+
+eğer(bayrak)
+{
+  no = no + 3
+}
+değilse
+  no = no - 10
+
+yinele(no < 20)
+  no = no + 1
+
+degişken test = no <= 20
+
+yaz no
