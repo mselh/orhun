@@ -49,81 +49,17 @@ func main() {
 	}
 
 	// tokenize
-	tokens := make([]string, 0)
-	start := 0
-	skip := 0
-
-	// string
 	prog := []rune(string(text))
-	for i, r := range prog {
-		// search for cases
-		if skip > 0 {
-			skip--
-			continue
-		}
-
-		if r == '\n' {
-			continue
-		}
-
-		if unicode.IsSpace(r) {
-			continue
-		}
-
-		// numeric literal
-		if unicode.IsDigit(r) {
-			start := i
-			fin := i + 1
-			for unicode.IsDigit(prog[fin]) {
-				fin++
-			}
-			tokens = append(tokens, string(prog[start:fin]))
-			skip = fin - start - 1
-			continue
-		}
-
-		if isIdent(r) {
-			fmt.Println("start:", start)
-			start = i
-			fin := i + 1
-			for isIdent2(prog[fin]) {
-				fin++
-			}
-			tokens = append(tokens, string(prog[start:fin]))
-			fmt.Println("end:", fin)
-			skip = fin - start - 1
-			continue
-		}
-
-		// last case is for punctuators
-		p := string(prog[i : i+2])
-		if punctLen := readPunct(p); punctLen > 0 {
-			tokens = append(tokens, string(prog[i:i+punctLen]))
-			skip = punctLen - 1
-			continue
-		}
-
-		fmt.Println(r, "invalid token")
-
-		fmt.Println(string(r), i)
-	}
-
+	tokens := tokenize(prog)
 	for i, v := range tokens {
-		fmt.Println(i, "'"+v+"'")
+		fmt.Println(i, "'"+v.val+"'")
 	}
 
 	// parse
-	type Node struct {
-		lhs *Node // left hand side
-		rhs *Node // right hand side
+	fn := new(Function)
+	fn.body = compoundStmt(tokens, fn)
+	fmt.Println(fn)
 
-		// Block, used if kind == ND_BLOCK
-		body *Node
-	}
-
-	type prog struct {
-		body   *Node
-		locals *Obj
-	}
+	// codegen
 
 }
