@@ -86,8 +86,85 @@ func declaration(tokenList []token, tok token, f *Function, start int) (declNode
 }
 
 // only look for num for now
-func expression(tl []token) {
+func expression(tl []token) (node *Node, skip int) {
+	return assign(tl)
+}
 
+// assign = equality
+func assign(tl []token) (node *Node, skip int) {
+	node := equality(tl)
+	return node
+}
+
+func add(tl []token) *Node {
+	node := mul(tl)
+
+	i := 0
+	for ; tl[i].val != "\n"; i++ {
+		if tl[i].val == "+" {
+			node = NewAdd(node, mul(tl))
+			continue
+		}
+
+		return node
+	}
+}
+
+// mul = unary ("*" unary | "/" unary)*
+// for now mul = unary
+func mul(tl []token) *Node {
+	node := unary(tl)
+	return node
+}
+
+func unary(tl []token) *Node {
+	return primary(tl)
+}
+
+func findVar() *Obj {
+
+}
+
+// primary
+func primary(tl []token) *Node {
+	if tl[1].val == "IDENTIFIER" {
+		// Variable
+		v := findVar(tok)
+		if v == nil {
+			panic(tok, "undefined variable")
+		}
+		*rest = tok.Next
+		return NewVarNode(v, tok)
+	}
+
+	if tok.kind == "NUMBER" {
+		node := NewNum(tok.val, tok)
+		*rest = tok.Next
+		return node
+	}
+
+	panic("expected an expression")
+}
+
+func NewAdd(lhs, rhs *Node, tl []token) (binaryNode *Node) {
+	if lhs.kind == "INTEGER" && rhs.kind == "INTEGER" {
+		n := new(Node)
+		n.kind = "ADD"
+		n.lhs = lhs
+		n.rhs = rhs
+		return n
+	}
+
+	panic("bad add expr")
+}
+
+// equality = relational
+func equality(tl []token) (node *Node, skip int) {
+	return relational()
+}
+
+func relational(tl []token) (node *Node, skip int) {
+	return add(tl)
 }
 
 func compoundStmt(tl []token, f *Function) []*Node {
