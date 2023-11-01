@@ -86,43 +86,42 @@ func declaration(tokenList []token, tok token, f *Function, start int) (declNode
 }
 
 // only look for num for now
-func expression(tl []token) (node *Node, skip int) {
-	return assign(tl)
+func (f *Function) expression(tl []token) (node *Node, skip int) {
+	return f.assign(tl)
 }
 
 // assign = equality
-func assign(tl []token) (node *Node, skip int) {
-	node := equality(tl)
-	return node
+func (f *Function) assign(tl []token) (node *Node, skip int) {
+	return f.equality(tl)
 }
 
-func add(tl []token) *Node {
-	node := mul(tl)
+func (f *Function) add(tl []token) *Node {
+	node, skip := f.mul(tl)
 
 	i := 0
 	for ; tl[i].val != "\n"; i++ {
 		if tl[i].val == "+" {
-			node = NewAdd(node, mul(tl))
+			node, skip = NewAdd(node, f.mul(tl))
 			continue
 		}
 
-		return node
+		return node, skip
 	}
 }
 
 // mul = unary ("*" unary | "/" unary)*
 // for now mul = unary
-func mul(tl []token) *Node {
-	node := unary(tl)
+func (f *Function) mul(tl []token) (unary *Node, skip int) {
+	node := f.unary(tl)
 	return node
 }
 
-func unary(tl []token) *Node {
-	return primary(tl)
+func (f *Function) unary(tl []token) *Node {
+	return f.primary(tl)
 }
 
 // find local var by name
-func (f *Function) findVar(string name) *Obj {
+func (f *Function) findVar(name string) *Obj {
 	for _, v := range f.locals {
 		if v.name == name {
 			return v
@@ -133,10 +132,10 @@ func (f *Function) findVar(string name) *Obj {
 
 // primary
 // needs to access local variables of the function
-func primary(tl []token, f *Function) (primary *Node, skip int) {
+func (f *Function) primary(tl []token) (primary *Node, skip int) {
 	if tl[1].val == "IDENTIFIER" {
 		// Variable
-		v := findVar(tl[1].val)
+		v := f.findVar(tl[1].val)
 		if v == nil {
 			panic(tok, "undefined variable")
 		}
@@ -169,12 +168,12 @@ func NewAdd(lhs, rhs *Node, tl []token) (binaryNode *Node) {
 }
 
 // equality = relational
-func equality(tl []token) (node *Node, skip int) {
-	return relational()
+func (f *Function) equality(tl []token) (node *Node, skip int) {
+	return f.relational()
 }
 
-func relational(tl []token) (node *Node, skip int) {
-	return add(tl)
+func (f *Function) relational(tl []token) (node *Node, skip int) {
+	return f.add(tl)
 }
 
 func compoundStmt(tl []token, f *Function) []*Node {
