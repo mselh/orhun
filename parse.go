@@ -21,23 +21,23 @@ type Node struct {
 	val int // used if kind = VAL
 }
 
+// local variable
 type Obj struct {
-	name string
-	ty   string
-	next *Obj
+	name   string
+	ty     string
+	offset int // offset from rbp, think this as addr but for local stack
 }
 
 type Function struct {
 	body   []*Node
-	locals *Obj
+	locals []*Obj
 }
 
 func (f *Function) newLVar(name string, ty string) *Obj {
 	v := new(Obj)
 	v.name = name
 	v.ty = ty
-	v.next = f.locals
-	f.locals = v
+	f.locals = append(f.locals, v)
 	return v
 }
 
@@ -121,20 +121,30 @@ func unary(tl []token) *Node {
 	return primary(tl)
 }
 
-func findVar() *Obj {
-
+// find local var by name
+func (f *Function) findVar(string name) *Obj {
+	for _, v := range f.locals {
+		if v.name == name {
+			return v
+		}
+	}
+	return nil
 }
 
 // primary
-func primary(tl []token) *Node {
+// needs to access local variables of the function
+func primary(tl []token, f *Function) (primary *Node, skip int) {
 	if tl[1].val == "IDENTIFIER" {
 		// Variable
-		v := findVar(tok)
+		v := findVar(tl[1].val)
 		if v == nil {
 			panic(tok, "undefined variable")
 		}
-		*rest = tok.Next
-		return NewVarNode(v, tok)
+		skip = 1
+		n := new(Node)
+		n.kind = "VARIABLE"
+		n.variable = v
+		return n, skip
 	}
 
 	if tok.kind == "NUMBER" {
