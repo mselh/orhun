@@ -95,13 +95,14 @@ func (f *Function) assign(tl []token) (node *Node, skip int) {
 	return f.equality(tl)
 }
 
-func (f *Function) add(tl []token) *Node {
+// mul + mul
+func (f *Function) add(tl []token) (*Node, int) {
 	node, skip := f.mul(tl)
 
 	i := 0
 	for ; tl[i].val != "\n"; i++ {
 		if tl[i].val == "+" {
-			node, skip = NewAdd(node, f.mul(tl))
+			node = NewAdd(node, f.mul(tl))
 			continue
 		}
 
