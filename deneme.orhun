@@ -1,20 +1,24 @@
-// değişken bayrak mantıksal = yanlış
-değişken no tamsayı = 2
-değişken no2 tamsayı = 3
+giriş:
 
-no = 14
-yaz no
+	yeni tamsayı no = 2
+	yeni tamsayı no2 = 3
 
-eğer(bayrak)
-{
-  no = no + 3
-}
-değilse
-  no = no - 10
+	no = 14
+	no'yu yazdır
 
-yinele(no < 20)
-  no = no + 1
+	yeni önerme test = dogru
+	test = (no <= 20)
 
-degişken test mantıksal = no <= 20
+	eğer(test){
+		no = no + 3
+	}
+	değilse{
+		no = no - 10
+	}
 
-yaz no
+	yinele(no < 20)
+		no = no + 1
+
+	no'yu yazdır
+
+.

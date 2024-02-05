@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"regexp"
 	"unicode"
 )
 
@@ -12,89 +12,131 @@ type token struct {
 	pos  int
 }
 
-func tokenize(prog []rune) []token {
-	tokens := make([]token, 0)
-	start := 0
-	skip := 0
+type reader struct {
+	text      []rune
+	cur       int
+	tokenList []token
+}
 
-	for i, r := range prog {
-		// search for cases
-		if skip > 0 {
-			skip--
-			continue
-		}
+func (r *reader) tokenize() {
+	// dont token whitespaces
+	for r.cur < len(r.text) {
+		c := r.now()
 
-		if string(r) == "/" && len(prog) > i && string(prog[i+1]) == "/" {
-			fin := i + 1
-			for string(prog[fin]) != "\n" {
-				fin++
+		// is word?
+		if unicode.IsLetter(c) {
+			n := 0
+			for ; unicode.IsLetter(r.peekN(n)) ||
+				unicode.IsDigit(r.peekN(n)); n++ {
 			}
-			skip = fin
-			continue
-
-		}
-
-		if r == '\n' {
-			tokens = append(tokens, token{
-				val:  string("\n"),
-				pos:  i,
-				kind: "EOL",
-			})
+			r.consume(n, "word")
 			continue
 		}
 
-		if unicode.IsSpace(r) {
-			continue
-		}
-
-		// numeric literal
-		if unicode.IsDigit(r) {
-			start := i
-			fin := i + 1
-			for unicode.IsDigit(prog[fin]) {
-				fin++
+		// is no?
+		if unicode.IsDigit(c) {
+			// read till the end
+			n := 0
+			for ; unicode.IsDigit(r.peekN(n)); n++ {
 			}
-			tokens = append(tokens, token{
-				val:  string(prog[start:fin]),
-				pos:  i,
-				kind: "NUM",
-			})
-			skip = fin - start - 1
+			r.consume(n, "number")
 			continue
 		}
 
-		if isIdent(r) {
-			fmt.Println("start:", start)
-			start = i
-			fin := i + 1
-			for isIdent2(prog[fin]) {
-				fin++
+		// is punct?
+		if c == ':' {
+			r.consume(1, ":")
+			continue
+		}
+
+		if c == '<' || c == '>' {
+			if r.peek() == '=' {
+				r.consume(2, "op")
+				continue
 			}
-			tokens = append(tokens, token{
-				val:  string(prog[start:fin]),
-				pos:  i,
-				kind: "IDENTIFIER",
-			})
-			fmt.Println("end:", fin)
-			skip = fin - start - 1
+			r.consume(1, "op")
 			continue
 		}
 
-		// last case is for punctuators
-		p := string(prog[i : i+2])
-		if punctLen := readPunct(p); punctLen > 0 {
-			tokens = append(tokens, token{
-				val:  string(prog[i : i+punctLen]),
-				pos:  i,
-				kind: "PUNCT",
-			})
-			skip = punctLen - 1
+		// ar for arithmeic
+		if c == '+' || c == '-' || c == '*' || c == '/' {
+			r.consume(1, "ar")
 			continue
 		}
 
-		log.Fatal(r, "invalid token")
+		// bracket
+		if c == '(' || c == ')' {
+			r.consume(1, "br")
+			continue
+		}
+
+		if c == '{' || c == '}' {
+			r.consume(1, "par")
+			continue
+		}
+
+		if c == '\n' {
+			r.consume(1, "nl")
+			continue
+		}
+
+		if c == '=' {
+			r.consume(1, "eq")
+			continue
+		}
+
+		// in this case look prev
+		// Belirtme veya Yükleme Hali: Belirtme hali ekleri -ı, -i, -u, -ü
+		// "y" kaynastirma
+		if c == '\'' {
+			if b := r.backstep(); unicode.IsLetter(b) || unicode.IsDigit(b) {
+				// read until next whitespace
+				n := 0
+				for ; r.peekN(n) != ' '; n++ {
+				}
+				p := "[y,n]?[i,ı,ü,u]"
+				ek := r.text[r.cur : r.cur+n]
+				match, _ := regexp.MatchString(p, string(ek))
+				if !match {
+					log.Fatal("wrong postfix at:", r.cur)
+				}
+				r.consume(n, "ek")
+			}
+		}
+
+		if c == '.' {
+			r.consume(1, "dot")
+			continue
+		}
+
+		r.cur++
+
 	}
 
-	return tokens
+}
 
+func (r *reader) now() rune {
+	return r.text[r.cur]
+}
+
+func (r *reader) peek() rune {
+	return r.text[r.cur+1]
+}
+
+func (r *reader) backstep() rune {
+	return r.text[r.cur-1]
+}
+
+func (r *reader) peekN(n int) rune {
+	return r.text[r.cur+n]
+}
+
+func (r *reader) consume(step int, kind string) {
+	t := token{
+		val:  string(r.text[r.cur : r.cur+step]),
+		kind: kind,
+		pos:  r.cur,
+	}
+	r.cur += step
+	r.tokenList = append(r.tokenList, t)
 }
