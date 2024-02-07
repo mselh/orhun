@@ -21,12 +21,18 @@ func main() {
 	}
 	r.tokenize()
 	for i, v := range r.tokenList {
-		fmt.Println(i, "'"+v.val+"'")
+		fmt.Println(i, "'"+v.val+"'", "kind:", v.kind)
 	}
 
 	// parse
-	//fn := new(Function)
-	//fn.body = compoundStmt(tokens, fn)
+	p := parser{
+		tokenList: r.tokenList,
+		cur:       0,
+		root: &node{
+			kind: "root",
+		},
+	}
+	p.parseAll()
 	//fmt.Println(fn)
 
 	// codegen

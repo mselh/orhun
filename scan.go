@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"unicode"
@@ -10,12 +11,14 @@ type token struct {
 	kind string
 	val  string
 	pos  int
+	line int
 }
 
 type reader struct {
 	text      []rune
 	cur       int
 	tokenList []token
+	lineNo    int
 }
 
 func (r *reader) tokenize() {
@@ -23,11 +26,38 @@ func (r *reader) tokenize() {
 	for r.cur < len(r.text) {
 		c := r.now()
 
+		if r.now() == '/' && r.cur < len(r.text) && r.peekN(1) == '*' {
+			fmt.Println("comment token!!!")
+
+			fmt.Println("r back", string(r.backstep()), "bool:", r.backstep() != '*')
+			fmt.Println("r now", string(r.now()), "bool:", r.now() != '/')
+			// skip reading until */
+			for {
+				if r.cur == len(r.text) {
+					log.Fatalln("comment is not closed")
+				}
+				if r.now() == '\n' {
+					r.lineNo++
+				}
+				if r.now() == '/' && r.backstep() == '*' {
+					r.cur++
+					break
+				}
+				r.cur++
+			}
+			fmt.Println("out of comment at:", r.lineNo, string(r.lineNo))
+			continue
+		}
+
 		// is word?
 		if unicode.IsLetter(c) {
 			n := 0
 			for ; unicode.IsLetter(r.peekN(n)) ||
 				unicode.IsDigit(r.peekN(n)); n++ {
+			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "doğru" || w == "yanlış" {
+				r.consume(n, "bool")
+				continue
 			}
 			r.consume(n, "word")
 			continue
@@ -59,7 +89,7 @@ func (r *reader) tokenize() {
 		}
 
 		// ar for arithmeic
-		if c == '+' || c == '-' || c == '*' || c == '/' {
+		if c == '+' || c == '-' || c == '*' || (c == '/') {
 			r.consume(1, "ar")
 			continue
 		}
@@ -77,6 +107,7 @@ func (r *reader) tokenize() {
 
 		if c == '\n' {
 			r.consume(1, "nl")
+			r.lineNo++
 			continue
 		}
 
@@ -136,6 +167,7 @@ func (r *reader) consume(step int, kind string) {
 		val:  string(r.text[r.cur : r.cur+step]),
 		kind: kind,
 		pos:  r.cur,
+		line: r.lineNo,
 	}
 	r.cur += step
 	r.tokenList = append(r.tokenList, t)
