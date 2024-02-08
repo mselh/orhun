@@ -9,10 +9,10 @@ giriş:
 	no'yu ve no2'yi yazdır
 
 	yeni önerme test = doğru
+
+	test = (no <= 20)
 .
 /*
-	test = (no <= 20)
-
 .
 	eğer test doğruysa:
 		no = no + 3
@@ -21,6 +21,8 @@ giriş:
 
 	yinele(no < 20)
 		no = no + 1
+
+	test = doğru VEYA test
 
 	no'yu yazdır
 .*/

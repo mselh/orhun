@@ -88,6 +88,8 @@ func (r *reader) tokenize() {
 			continue
 		}
 
+		// if c == 'VE' || c == 'VEYA'
+
 		// ar for arithmeic
 		if c == '+' || c == '-' || c == '*' || (c == '/') {
 			r.consume(1, "ar")

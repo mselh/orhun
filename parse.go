@@ -181,21 +181,81 @@ func (p *parser) parseNew() *node {
 // ONERME: [DOGRU | YANLIS]
 // ONERME:  SAYI < > <= => SAYI
 func (p *parser) parseVal() *node {
-	// read until next line
-	lineEnd := 0
-	for p.peekN(lineEnd).kind != "nl" {
-		lineEnd++
+
+	fmt.Println("testing parseVal", p.now())
+	// parantheses
+	if p.now().val == "(" {
+		n := new(node)
+		n.kind = "PAR"
+		p.cur++
+		n.left = p.parseVal()
+		if p.now().val != ")" {
+			log.Fatal("unclosed paranthesis", p.now())
+		}
+		return n
 	}
-	if p.now().kind == "number" && p.peekN(1).kind == "nl" {
+
+	if p.peekN(0).kind == "word" {
+		n := new(node)
+		n.kind = "VAR"
+		n.val = p.now().val
+		p.cur++ // skip op
+
+		// X VE|VEYA Y
+		if p.now().kind == "op" {
+			root := new(node)
+			root.kind = "OP"
+			root.val = p.now().val
+
+			// skip op
+			p.cur++
+
+			right := p.parseVal()
+			root.right = right
+			root.left = n
+			return root
+		}
+
+		// X [[+/*-] Y ]*
+		if p.now().kind == "ar" {
+			root := new(node)
+			root.kind = "AR"
+			root.val = p.now().val
+
+			// skip op
+			p.cur++
+
+			right := p.parseVal()
+			root.right = right
+			root.left = n
+			return root
+		}
+
+		// Eger sadece tek deger varsa
+		n.right = p.parseVal()
+		return n
+	}
+
+	if p.now().kind == "number" {
 		n := new(node)
 		n.kind = "NUM"
 		n.val = p.now().val
 		p.cur++
 		return n
 	}
-	if p.now().kind == "bool" && p.peekN(1).kind == "nl" {
+	if p.now().kind == "bool" {
 		n := new(node)
 		n.kind = "BOOL"
+		n.val = p.now().val
+		p.cur++
+		return n
+	}
+
+	// means a variable name
+	if p.now().kind == "word" {
+		fmt.Println("WORD EVAL")
+		n := new(node)
+		n.kind = "VAR"
 		n.val = p.now().val
 		p.cur++
 		return n
