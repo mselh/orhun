@@ -251,16 +251,6 @@ func (p *parser) parseVal() *node {
 		return n
 	}
 
-	// means a variable name
-	if p.now().kind == "word" {
-		fmt.Println("WORD EVAL")
-		n := new(node)
-		n.kind = "VAR"
-		n.val = p.now().val
-		p.cur++
-		return n
-	}
-
 	log.Fatal("couldnt parse at: ", p.cur, p.now())
 	return nil
 }
