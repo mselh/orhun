@@ -33,8 +33,7 @@ func main() {
 		},
 	}
 	p.parseAll()
-	//fmt.Println(fn)
 
-	// codegen
+	// walk
 
 }
