@@ -17,29 +17,42 @@ type node struct {
 
 	// only used for "fnParams" node
 	fnParams []*node
+
+	// only used with if statement
+	ifNode *node
 }
 
 func (n *node) Print() {
-	print(n)
+	nprint(n, "")
 }
 
-func print(n *node) {
+func nprint(n *node, space string) {
 	if n == nil {
 		return
 	}
-	fmt.Println("---node---")
-	fmt.Println(n.kind)
-	fmt.Println(n.val)
-	print(n.left)
-	print(n.right)
+
+	fmt.Println(space, "---node---")
+	fmt.Println(space, n.kind)
+	fmt.Println(space, n.val)
 	if len(n.fnParams) > 0 {
-		fmt.Print("fn params:")
+		fmt.Print(space, "fn params:")
 		for i := range n.fnParams {
 			fmt.Print(n.fnParams[i].val, " ")
 		}
 		fmt.Println()
 	}
-	fmt.Println("---end---")
+	if len(n.exprs) > 0 {
+		fmt.Println(space, "expr:")
+		for i := range n.exprs {
+			nprint(n.exprs[i], space+" ")
+		}
+		fmt.Println()
+	}
+	oldspace := space
+	space = space + " "
+	nprint(n.left, space)
+	nprint(n.right, space)
+	fmt.Println(oldspace, "---end---")
 }
 
 type parser struct {
@@ -56,6 +69,7 @@ func (p *parser) parseAll() {
 
 		if t.val == "giriş" {
 			entry := p.parseEntry()
+			entry.Print()
 			// below may change
 			p.root.left = entry
 			continue
@@ -72,34 +86,9 @@ func (p *parser) parseAll() {
 }
 
 func (p *parser) parseEntry() *node {
-	e := node{
-		kind:  "entry",
-		exprs: make([]*node, 0),
-	}
-
-	// skip giris and :
+	// skip giris
 	p.cur++
-	if p.now().val != ":" {
-		log.Fatal("cant parse giris at", p.cur)
-	}
-	p.cur++
-
-	// read all expressions
-	for p.now().val != "." {
-		if p.now().kind == "nl" {
-			p.cur++
-			continue
-		}
-		fmt.Println("parsing expr starting at:", p.now())
-		n := p.parseExpr()
-		n.Print()
-		fmt.Println("after parse token:", p.now())
-		e.exprs = append(e.exprs, n)
-	}
-	// skip last dot
-	p.cur++
-
-	return &e
+	return p.parseBlock("entry")
 }
 
 // expressions
@@ -118,8 +107,44 @@ func (p *parser) parseExpr() *node {
 		return p.parseNew()
 	}
 
+	// if
+	// eger [bool.value] dogruysa:
+	// block
+	// .?
+	//}
+	// left note if true block
+	// r is else
+	//
+	// for loop
+	// eger bool.value dogruysa yinele:
+	// block
+	// .
 	if p.now().val == "eğer" {
+		n := new(node)
+		n.kind = "if"
+		p.cur++
+		n.ifNode = p.parseVal()
+		p.cur++ // skip dogruysa
 
+		// check for while
+		if p.now().val == "yinele" {
+			n.kind = "while"
+			p.cur++ //skip yinele
+			n.left = p.parseBlock("while")
+			return n
+		}
+
+		n.left = p.parseBlock("ifr")
+		if p.now().kind == "nl" {
+			p.cur++
+		}
+
+		if p.now().val == "değilse" {
+			p.cur++
+			n.right = p.parseBlock("ifw")
+		}
+
+		return n
 	}
 
 	if p.now().val == "yinele" {
@@ -182,7 +207,6 @@ func (p *parser) parseNew() *node {
 // ONERME:  SAYI < > <= => SAYI
 func (p *parser) parseVal() *node {
 
-	fmt.Println("testing parseVal", p.now())
 	// parantheses
 	if p.now().val == "(" {
 		n := new(node)
@@ -192,6 +216,7 @@ func (p *parser) parseVal() *node {
 		if p.now().val != ")" {
 			log.Fatal("unclosed paranthesis", p.now())
 		}
+		p.cur++
 		return n
 	}
 
@@ -199,7 +224,8 @@ func (p *parser) parseVal() *node {
 		n := new(node)
 		n.kind = "VAR"
 		n.val = p.now().val
-		p.cur++ // skip op
+		p.cur++ // skip word
+		//fmt.Println("next:", p.now())
 
 		// X VE|VEYA Y
 		if p.now().kind == "op" {
@@ -231,8 +257,6 @@ func (p *parser) parseVal() *node {
 			return root
 		}
 
-		// Eger sadece tek deger varsa
-		n.right = p.parseVal()
 		return n
 	}
 
@@ -311,6 +335,33 @@ func (p *parser) parseFnCall() *node {
 	p.cur += fnStart + 1
 	p.cur++
 	return n
+}
+
+func (p *parser) parseBlock(blockType string) *node {
+
+	if p.now().val != ":" {
+		log.Fatal("cant parse block start at", p.now())
+	}
+
+	p.cur++
+	b := new(node) // new block node
+	b.kind = "block"
+	b.val = blockType
+	b.exprs = make([]*node, 0)
+
+	// read all
+	for p.now().val != "." {
+		if p.now().kind == "nl" {
+			p.cur++
+			continue
+		}
+		//fmt.Println("parsing expr starting at:", p.now())
+		n := p.parseExpr()
+		//n.Print()
+		b.exprs = append(b.exprs, n)
+	}
+	p.cur++ // skip last dot
+	return b
 }
 
 // helpers

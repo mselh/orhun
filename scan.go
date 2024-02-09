@@ -59,6 +59,18 @@ func (r *reader) tokenize() {
 				r.consume(n, "bool")
 				continue
 			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "eğer" {
+				r.consume(n, "eğer")
+				continue
+			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "ve" {
+				r.consume(n, "op")
+				continue
+			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "veya" {
+				r.consume(n, "op")
+				continue
+			}
 			r.consume(n, "word")
 			continue
 		}
@@ -87,8 +99,6 @@ func (r *reader) tokenize() {
 			r.consume(1, "op")
 			continue
 		}
-
-		// if c == 'VE' || c == 'VEYA'
 
 		// ar for arithmeic
 		if c == '+' || c == '-' || c == '*' || (c == '/') {

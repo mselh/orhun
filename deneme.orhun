@@ -11,18 +11,19 @@ giriş:
 	yeni önerme test = doğru
 
 	test = (no <= 20)
-.
-/*
-.
+
 	eğer test doğruysa:
 		no = no + 3
+	.
 	değilse:
 		no = no - 10
+	.
 
-	yinele(no < 20)
+	eğer no < 20 doğruysa yinele:
 		no = no + 1
+	.
 
-	test = doğru VEYA test
+	test = test veya doğru
 
 	no'yu yazdır
-.*/
+.
