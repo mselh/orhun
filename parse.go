@@ -8,6 +8,7 @@ import (
 type node struct {
 	val  string
 	kind string
+	line int
 
 	left  *node
 	right *node
@@ -263,6 +264,7 @@ func (p *parser) parseVal() *node {
 	if p.now().kind == "number" {
 		n := new(node)
 		n.kind = "NUM"
+		n.line = p.now().line
 		n.val = p.now().val
 		p.cur++
 		return n
@@ -302,6 +304,7 @@ func (p *parser) parseAssign() *node {
 // word'ek fn
 // [word'ek ve]* word'ek fn
 // fn
+// ilerde buraya bool ve int konmasini dusunebiliriz.
 func (p *parser) parseFnCall() *node {
 	n := new(node)
 	n.kind = "fnCall"

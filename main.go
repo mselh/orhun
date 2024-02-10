@@ -35,5 +35,7 @@ func main() {
 	p.parseAll()
 
 	// walk
+	walker := newProgram(p.root)
+	walker.walk()
 
 }

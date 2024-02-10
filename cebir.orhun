@@ -1,0 +1,6 @@
+yeni işlev çarp = (a tamsayı,b tamsayı) => tamsayı:
+
+    yeni tamsayı c = a*b
+    
+    c'yi ver. 
+.

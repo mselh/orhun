@@ -12,6 +12,7 @@ giriş:
 
 	test = (no <= 20)
 
+./*
 	eğer test doğruysa:
 		no = no + 3
 	.
@@ -26,4 +27,4 @@ giriş:
 	test = test veya doğru
 
 	no'yu yazdır
-.
+.*/
