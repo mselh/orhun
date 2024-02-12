@@ -93,10 +93,10 @@ func (r *reader) tokenize() {
 
 		if c == '<' || c == '>' {
 			if r.peek() == '=' {
-				r.consume(2, "op")
+				r.consume(2, "rel")
 				continue
 			}
-			r.consume(1, "op")
+			r.consume(1, "rel")
 			continue
 		}
 

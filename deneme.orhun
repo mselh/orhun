@@ -8,7 +8,7 @@ giriş:
 
 	no'yu ve no2'yi yazdır
 
-	yeni önerme test = doğru
+	yeni önerme test = yanlış
 
 	test = (no <= 20)
 

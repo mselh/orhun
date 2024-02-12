@@ -148,10 +148,6 @@ func (p *parser) parseExpr() *node {
 		return n
 	}
 
-	if p.now().val == "yinele" {
-
-	}
-
 	// syntax
 	// for, variable = new value , act as assing
 	// for, [v'[postfix]]? [inscope function]
@@ -232,6 +228,20 @@ func (p *parser) parseVal() *node {
 		if p.now().kind == "op" {
 			root := new(node)
 			root.kind = "OP"
+			root.val = p.now().val
+
+			// skip op
+			p.cur++
+
+			right := p.parseVal()
+			root.right = right
+			root.left = n
+			return root
+		}
+
+		if p.now().kind == "rel" {
+			root := new(node)
+			root.kind = "REL"
 			root.val = p.now().val
 
 			// skip op

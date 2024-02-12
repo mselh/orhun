@@ -109,7 +109,7 @@ func (p *program) walk() {
 		def, val := exec(e, entryScope)
 		if def != "" {
 			entryScope.localVars[def] = val
-			log.Println("added new def to scope:", entryScope.localVars)
+			log.Println("added new def to scope :", *val, entryScope.localVars)
 		}
 
 	}
@@ -123,11 +123,16 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 	if e.kind == "new" {
 		name := e.val // expression val is the name
 		v := new(val)
-		if e.left.val == "tamsayı" {
-			v.typeName = "int"
-			v.intval = evalIntValue(e.right)
-		}
+		v.typeName = e.left.val
 
+		// initial values are evaluated according to the type
+		if e.left.val == "tamsayı" {
+			v.intval = evalIntValue(e.right, parentScope)
+		}
+		if e.left.val == "önerme" {
+			v.boolVal = evalBoolValue(e.right, parentScope)
+		}
+		fmt.Println("new var:", e.left.val)
 		return name, v
 	}
 	if e.kind == "assign" {
@@ -138,8 +143,12 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 			log.Fatal("cant find variable in the scope, can't assign, ", e.line, e)
 		}
 
-		if v.typeName == "int" {
-			v.intval = evalIntValue(e.right)
+		if v.typeName == "tamsayı" {
+			v.intval = evalIntValue(e.right, parentScope)
+		}
+		if v.typeName == "önerme" {
+			v.boolVal = evalBoolValue(e.right, parentScope)
+			fmt.Println("bool:", v.boolVal)
 		}
 
 		fmt.Println("reassigned var:", e.left.val)
@@ -171,7 +180,7 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 		}
 		_, err := v.funcVal.exec(fnParams)
 		if err != nil {
-			log.Fatal("err while exec in g fn,", err, fnName, e.line, e)
+			log.Fatal("err while execing fn,", err, fnName, e.line, e)
 		}
 		return "", nil
 
@@ -181,7 +190,7 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 	return "", nil
 }
 
-func evalIntValue(n *node) int {
+func evalIntValue(n *node, s *scope) int {
 	//walks and evaluates a valude node, who is int
 	if n.kind == "NUM" {
 		i, err := strconv.Atoi(n.val)
@@ -191,8 +200,99 @@ func evalIntValue(n *node) int {
 		return i
 	}
 
+	if n.kind == "VAR" {
+		fmt.Println("evaling VAR node as int,", n.line, n)
+		v := searchVar(s, n.val)
+		return v.intval
+	}
+
+	if n.kind == "PAR" {
+		// evaluate the pharantesis then return
+		return evalIntValue(n.left, s)
+	}
+
+	if n.kind == "AR" {
+
+		leftval := evalIntValue(n.left, s)
+		rightval := evalIntValue(n.right, s)
+		if n.val == "+" {
+			return leftval + rightval
+		}
+		if n.val == "*" {
+			return leftval * rightval
+		}
+		if n.val == "/" {
+			return leftval / rightval
+		}
+		if n.val == "-" {
+			return leftval - rightval
+		}
+	}
+
 	log.Fatal("can't parse node at", n.line, n)
 	return 0
+}
+
+func evalBoolValue(n *node, s *scope) bool {
+	//walks and evaluates a value node, who is bool
+	if n.kind == "BOOL" {
+		return n.val == "doğru"
+	}
+
+	if n.kind == "PAR" {
+		// evaluate the pharantesis then return
+		return evalBoolValue(n.left, s)
+	}
+
+	if n.kind == "VAR" {
+		fmt.Println("evaling VAR node as bool,", n.line, n)
+		v := searchVar(s, n.val)
+		return v.boolVal
+	}
+
+	if n.kind == "OP" {
+
+		if n.left.kind == "BOOL" && n.right.kind == "BOOL" {
+			leftval := evalBoolValue(n.left, s)
+			rightval := evalBoolValue(n.right, s)
+			if n.val == "ve" {
+				return leftval && rightval
+			}
+			if n.val == "veya" {
+				return leftval
+			}
+		}
+
+	}
+
+	if n.kind == "REL" {
+		leftval := evalIntValue(n.left, s)
+		rightval := evalIntValue(n.right, s)
+		if n.val == "<" {
+			return leftval < rightval
+		}
+		if n.val == "<=" {
+			return leftval <= rightval
+		}
+		if n.val == ">" {
+			return leftval > rightval
+		}
+		if n.val == ">=" {
+			return leftval >= rightval
+		}
+	}
+
+	n.Print()
+	log.Fatalln("cant evaluate bool value of node:", n.line)
+	return false
+}
+
+func execIfNode() {
+
+}
+
+func execWhileNode() {
+
 }
 
 // helpers
@@ -229,7 +329,7 @@ func addBuiltins(s *scope) {
 		return nil
 	}
 	printFn.isParamsParametric = true
-	printFn.signature = []val{{typeName: "int"}}
+	printFn.signature = []val{{typeName: "tamsayı"}}
 
 	printFnVal := new(val)
 	printFnVal.typeName = "fn"
