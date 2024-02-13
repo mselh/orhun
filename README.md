@@ -67,4 +67,5 @@ struct/ozne/yapi tanimlamalari
 
 sonraki hedefler?
 Modul destegi ve syntaxi
+
 LLVM 
