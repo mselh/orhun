@@ -98,6 +98,20 @@ func (p *program) walk() {
 	// add builtin variables to root scope
 	addBuiltins(p.rootScope)
 
+	// add global declaratins to root scope
+	for i := range p.rootNode.exprs {
+		n := p.rootNode.exprs[i]
+		if n.kind != "new" {
+			log.Fatalln("unexpected exprs,", n.line, "only 'yeni' is allowed")
+		}
+		key, v := exec(n, p.rootScope)
+		if searchVar(p.rootScope, key) != nil {
+			log.Fatalln("already defined key,", key)
+		}
+		p.rootScope.localVars[key] = v
+	} // TODO: evaluate them later if right side includes a variable
+	// you also need to detect recursive declarations etc. too much work for now
+
 	// start from entry
 	entryNode := p.rootNode.left
 	execBlockNode(entryNode, p.rootScope)
@@ -329,6 +343,7 @@ func execBlockNode(n *node, parentScope *scope) {
 func newProgram(root *node) *program {
 	rootScope := new(scope)
 	rootScope.localVars = make(map[string]*val)
+	rootScope.parent = nil
 
 	return &program{
 		rootNode:  root,

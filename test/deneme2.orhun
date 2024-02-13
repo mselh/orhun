@@ -1,0 +1,9 @@
+
+yeni tamsayı no = 2
+
+giriş:
+	yeni tamsayı no3 = no + no2
+	no'yu ve no2'yi ve no3'u yazdır
+.
+
+yeni tamsayı no2 = 7

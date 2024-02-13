@@ -1,13 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-var DEBUG = false
+var DEBUG = true
 
 func myPrintln(a ...any) {
 	if DEBUG {
@@ -22,6 +23,10 @@ func myPrint(a ...any) {
 }
 
 func main() {
+	debugFlag := flag.Bool("debug", false, "enables debug info")
+	flag.Parse()
+	DEBUG = *debugFlag
+
 	myPrintln("reading the program")
 	text, err := io.ReadAll(os.Stdin)
 	if err != nil {

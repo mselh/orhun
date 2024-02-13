@@ -12,7 +12,7 @@ type node struct {
 	left  *node
 	right *node
 
-	// only used for entry kind node
+	// only used for block kind node
 	exprs []*node
 
 	// only used for "fnParams" node
@@ -63,6 +63,9 @@ type parser struct {
 
 func (p *parser) parseAll() {
 
+	// store global new vars in the expressions[] node of the root
+	p.root.exprs = make([]*node, 0)
+
 	for p.cur < len(p.tokenList) {
 		t := p.tokenList[p.cur]
 		myPrintln("parsing tok:", t)
@@ -77,6 +80,16 @@ func (p *parser) parseAll() {
 
 		if t.kind == "nl" {
 			p.cur++
+			continue
+		}
+
+		// parse global "yeni" as expressions
+		if t.val == "yeni" {
+			nvar := p.parseNew()
+			if nvar == nil {
+				log.Fatalln("err while parsing new", t.line)
+			}
+			p.root.exprs = append(p.root.exprs, nvar)
 			continue
 		}
 
