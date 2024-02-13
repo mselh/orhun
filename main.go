@@ -7,8 +7,22 @@ import (
 	"os"
 )
 
+var DEBUG = false
+
+func myPrintln(a ...any) {
+	if DEBUG {
+		fmt.Println(a)
+	}
+}
+
+func myPrint(a ...any) {
+	if DEBUG {
+		fmt.Print(a)
+	}
+}
+
 func main() {
-	fmt.Println("reading the program")
+	myPrintln("reading the program")
 	text, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		log.Println(err)
@@ -21,7 +35,7 @@ func main() {
 	}
 	r.tokenize()
 	for i, v := range r.tokenList {
-		fmt.Println(i, "'"+v.val+"'", "kind:", v.kind)
+		myPrintln(i, "'"+v.val+"'", "kind:", v.kind)
 	}
 
 	// parse

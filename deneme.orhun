@@ -10,9 +10,9 @@ giriş:
 
 	yeni önerme test = yanlış
 
-	test = (no <= 20)
+	test = (no <= 2)
 
-./*
+
 	eğer test doğruysa:
 		no = no + 3
 	.
@@ -27,4 +27,4 @@ giriş:
 	test = test veya doğru
 
 	no'yu yazdır
-.*/
+.

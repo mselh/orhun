@@ -100,19 +100,7 @@ func (p *program) walk() {
 
 	// start from entry
 	entryNode := p.rootNode.left
-	entryScope := new(scope)
-	entryScope.parent = p.rootScope
-	entryScope.localVars = make(map[string]*val)
-	for i := range entryNode.exprs {
-		e := entryNode.exprs[i]
-		// forgets children scopes after exec
-		def, val := exec(e, entryScope)
-		if def != "" {
-			entryScope.localVars[def] = val
-			log.Println("added new def to scope :", *val, entryScope.localVars)
-		}
-
-	}
+	execBlockNode(entryNode, p.rootScope)
 
 }
 
@@ -132,7 +120,7 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 		if e.left.val == "önerme" {
 			v.boolVal = evalBoolValue(e.right, parentScope)
 		}
-		fmt.Println("new var:", e.left.val)
+		myPrintln("new var:", e.left.val)
 		return name, v
 	}
 	if e.kind == "assign" {
@@ -148,11 +136,11 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 		}
 		if v.typeName == "önerme" {
 			v.boolVal = evalBoolValue(e.right, parentScope)
-			fmt.Println("bool:", v.boolVal)
+			myPrintln("bool:", v.boolVal)
 		}
 
-		fmt.Println("reassigned var:", e.left.val)
-		fmt.Println(parentScope)
+		myPrintln("reassigned var:", e.left.val)
+		myPrintln(parentScope)
 		return "", nil
 	}
 
@@ -186,6 +174,19 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 
 	}
 
+	if e.kind == "if" {
+		execIfNode(e, parentScope)
+		myPrintln(parentScope)
+		return "", nil
+	}
+
+	if e.kind == "while" {
+		myPrintln("entered while")
+		execWhileNode(e, parentScope)
+		myPrintln(parentScope)
+		return "", nil
+	}
+
 	log.Fatal("can't exec current node:", e.line, e)
 	return "", nil
 }
@@ -201,7 +202,7 @@ func evalIntValue(n *node, s *scope) int {
 	}
 
 	if n.kind == "VAR" {
-		fmt.Println("evaling VAR node as int,", n.line, n)
+		myPrintln("evaling VAR node as int,", n.line, n)
 		v := searchVar(s, n.val)
 		return v.intval
 	}
@@ -245,23 +246,23 @@ func evalBoolValue(n *node, s *scope) bool {
 	}
 
 	if n.kind == "VAR" {
-		fmt.Println("evaling VAR node as bool,", n.line, n)
+		myPrintln("evaling VAR node as bool,", n.line, n)
 		v := searchVar(s, n.val)
 		return v.boolVal
 	}
 
 	if n.kind == "OP" {
 
-		if n.left.kind == "BOOL" && n.right.kind == "BOOL" {
-			leftval := evalBoolValue(n.left, s)
-			rightval := evalBoolValue(n.right, s)
-			if n.val == "ve" {
-				return leftval && rightval
-			}
-			if n.val == "veya" {
-				return leftval
-			}
+		//if n.left.kind == "BOOL" && n.right.kind == "BOOL" {
+		leftval := evalBoolValue(n.left, s)
+		rightval := evalBoolValue(n.right, s)
+		if n.val == "ve" {
+			return leftval && rightval
 		}
+		if n.val == "veya" {
+			return leftval || rightval
+		}
+		//}
 
 	}
 
@@ -287,12 +288,41 @@ func evalBoolValue(n *node, s *scope) bool {
 	return false
 }
 
-func execIfNode() {
+func execIfNode(n *node, s *scope) {
+	// evaluate if expression
+	isTrue := evalBoolValue(n.ifNode, s)
+	blockNode := n.right
+	if isTrue {
+		blockNode = n.left
+	}
 
+	execBlockNode(blockNode, s)
 }
 
-func execWhileNode() {
+func execWhileNode(n *node, s *scope) {
+	//eval if in every loop
+	for {
+		if !evalBoolValue(n.ifNode, s) {
+			break
+		}
 
+		execBlockNode(n.left, s)
+	}
+}
+
+func execBlockNode(n *node, parentScope *scope) {
+	blockScope := new(scope)
+	blockScope.parent = parentScope
+	blockScope.localVars = make(map[string]*val)
+	for i := range n.exprs {
+		e := n.exprs[i]
+		// forgets children scopes after exec
+		def, val := exec(e, blockScope)
+		if def != "" {
+			blockScope.localVars[def] = val
+			myPrintln("added new def to scope :", *val, blockScope.localVars)
+		}
+	}
 }
 
 // helpers
@@ -321,11 +351,12 @@ func searchVar(cur *scope, key string) *val {
 func addBuiltins(s *scope) {
 	printFn := new(fn)
 	printFn.GoRef = func(v []*val) []val {
-		fmt.Println("WRITE CALLED")
+		myPrintln("WRITE CALLED")
 		for i := range v {
 			fmt.Print(v[i].intval, " ")
 		}
-		fmt.Println("\nWRITE FINISHED")
+		fmt.Println()
+		myPrintln("\nWRITE FINISHED")
 		return nil
 	}
 	printFn.isParamsParametric = true

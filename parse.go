@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -32,28 +31,28 @@ func nprint(n *node, space string) {
 		return
 	}
 
-	fmt.Println(space, "---node---")
-	fmt.Println(space, n.kind)
-	fmt.Println(space, n.val)
+	myPrintln(space, "---node---")
+	myPrintln(space, n.kind)
+	myPrintln(space, n.val)
 	if len(n.fnParams) > 0 {
-		fmt.Print(space, "fn params:")
+		myPrint(space, "fn params:")
 		for i := range n.fnParams {
-			fmt.Print(n.fnParams[i].val, " ")
+			myPrint(n.fnParams[i].val, " ")
 		}
-		fmt.Println()
+		myPrintln()
 	}
 	if len(n.exprs) > 0 {
-		fmt.Println(space, "expr:")
+		myPrintln(space, "expr:")
 		for i := range n.exprs {
 			nprint(n.exprs[i], space+" ")
 		}
-		fmt.Println()
+		myPrintln()
 	}
 	oldspace := space
 	space = space + " "
 	nprint(n.left, space)
 	nprint(n.right, space)
-	fmt.Println(oldspace, "---end---")
+	myPrintln(oldspace, "---end---")
 }
 
 type parser struct {
@@ -66,7 +65,7 @@ func (p *parser) parseAll() {
 
 	for p.cur < len(p.tokenList) {
 		t := p.tokenList[p.cur]
-		fmt.Println("parsing tok:", t)
+		myPrintln("parsing tok:", t)
 
 		if t.val == "giriş" {
 			entry := p.parseEntry()
@@ -81,7 +80,7 @@ func (p *parser) parseAll() {
 			continue
 		}
 
-		fmt.Println("cannot parse:", t)
+		myPrintln("cannot parse:", t)
 		return
 	}
 }
@@ -222,7 +221,7 @@ func (p *parser) parseVal() *node {
 		n.kind = "VAR"
 		n.val = p.now().val
 		p.cur++ // skip word
-		//fmt.Println("next:", p.now())
+		//myPrintln("next:", p.now())
 
 		// X VE|VEYA Y
 		if p.now().kind == "op" {
@@ -368,7 +367,7 @@ func (p *parser) parseBlock(blockType string) *node {
 			p.cur++
 			continue
 		}
-		//fmt.Println("parsing expr starting at:", p.now())
+		//myPrintln("parsing expr starting at:", p.now())
 		n := p.parseExpr()
 		//n.Print()
 		b.exprs = append(b.exprs, n)

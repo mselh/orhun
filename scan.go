@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 	"unicode"
@@ -27,10 +26,10 @@ func (r *reader) tokenize() {
 		c := r.now()
 
 		if r.now() == '/' && r.cur < len(r.text) && r.peekN(1) == '*' {
-			fmt.Println("comment token!!!")
+			myPrintln("comment token!!!")
 
-			fmt.Println("r back", string(r.backstep()), "bool:", r.backstep() != '*')
-			fmt.Println("r now", string(r.now()), "bool:", r.now() != '/')
+			myPrintln("r back", string(r.backstep()), "bool:", r.backstep() != '*')
+			myPrintln("r now", string(r.now()), "bool:", r.now() != '/')
 			// skip reading until */
 			for {
 				if r.cur == len(r.text) {
@@ -45,7 +44,7 @@ func (r *reader) tokenize() {
 				}
 				r.cur++
 			}
-			fmt.Println("out of comment at:", r.lineNo, string(r.lineNo))
+			myPrintln("out of comment at:", r.lineNo, string(r.lineNo))
 			continue
 		}
 
