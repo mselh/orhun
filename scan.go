@@ -44,7 +44,7 @@ func (r *reader) tokenize() {
 				}
 				r.cur++
 			}
-			myPrintln("out of comment at:", r.lineNo, string(r.lineNo))
+			myPrintln("out of comment at:", r.lineNo, r.lineNo)
 			continue
 		}
 
@@ -68,6 +68,10 @@ func (r *reader) tokenize() {
 			}
 			if w := string(r.text[r.cur : r.cur+n]); w == "veya" {
 				r.consume(n, "op")
+				continue
+			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "işlev" {
+				r.consume(n, "fn")
 				continue
 			}
 			r.consume(n, "word")

@@ -177,6 +177,7 @@ func (p *parser) parseExpr() *node {
 }
 
 // the subexpr parsers returns node, one hould at them to root
+// parses new variables and new functions
 func (p *parser) parseNew() *node {
 	if p.tokenList[p.cur+3].val != "=" {
 		log.Fatal("bad new variable decl. @", p.cur)
@@ -187,7 +188,12 @@ func (p *parser) parseNew() *node {
 	typename := p.tokenList[p.cur+1]
 
 	p.cur = p.cur + 4
-	value := p.parseVal()
+	var value *node
+	if typename.kind != "fn" {
+		value = p.parseVal()
+	} else {
+		value = p.parseFnDef()
+	}
 
 	n := new(node)
 	n.kind = "new"
@@ -323,6 +329,35 @@ func (p *parser) parseAssign() *node {
 	return n
 }
 
+// parsing a function
+var fnParam struct {
+	name     string
+	typename string
+}
+
+// parses fn def
+func (p *parser) parseFnDef() *node {
+	n := new(node)
+	n.kind = "fn"
+
+	// look for ()
+	if p.now().val != "(" {
+		log.Fatalln("bad fn definition at:", p.now().line, p.now())
+	}
+	p.cur++
+
+	// parse input params ([name type[,name type]*]?)
+	start := p.now()
+	for p.now().val != ")" {
+		if p.cur >= len(p.tokenList) {
+			log.Fatalln("bad fn input defn. no ) after", start.line, start)
+		}
+
+	}
+
+	return n
+}
+
 // word'ek fn
 // [word'ek ve]* word'ek fn
 // fn
@@ -339,6 +374,7 @@ func (p *parser) parseFnCall() *node {
 	fnStart := 0
 	for p.peekN(fnStart).kind == "word" &&
 		p.peekN(fnStart+1).kind == "ek" {
+		// make ek optional, feedback from an old friend
 
 		// add fn params
 		pn := new(node)

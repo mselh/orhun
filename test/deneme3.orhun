@@ -1,0 +1,39 @@
+yeni işlev çarp = (a tamsayı,b tamsayı) => tamsayı:
+
+    yeni tamsayı c = a*b
+    
+    c'yi döndür 
+.
+
+yeni işlev karesini_al = (a tamsayı) => tamsayı:
+
+    yeni tamsayı c = a*a
+    
+    c'yi döndür 
+.
+
+yeni işlev rastgele_sayı_üret = () => tamsayı:
+
+    yeni tamsayı c = 4
+    
+    c'yi döndür 
+.
+
+giriş:
+    yeni tamsayı a = 5
+    yeni tamsayı b = 3
+    yeni tamsayı c = 0
+    yeni tamsayı d = 0
+    yeni tamsayı e = 0
+    yeni tamsayı f = 0
+
+    a'yı ve b'yi çarp => c
+    a'nın karesini_al => d
+
+    rastgele_sayı_üret => e
+
+    yeni işlev üstünü_al = karesini_al
+    e'nin ve c'nin üstünü_al => f
+
+    c,d,e ve f'yi yazdır
+.
