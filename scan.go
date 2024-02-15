@@ -52,7 +52,8 @@ func (r *reader) tokenize() {
 		if unicode.IsLetter(c) {
 			n := 0
 			for ; unicode.IsLetter(r.peekN(n)) ||
-				unicode.IsDigit(r.peekN(n)); n++ {
+				unicode.IsDigit(r.peekN(n)) ||
+				r.peekN(n) == '_'; n++ {
 			}
 			if w := string(r.text[r.cur : r.cur+n]); w == "doğru" || w == "yanlış" {
 				r.consume(n, "bool")
@@ -94,6 +95,11 @@ func (r *reader) tokenize() {
 			continue
 		}
 
+		if c == ',' {
+			r.consume(1, "comma")
+			continue
+		}
+
 		if c == '<' || c == '>' {
 			if r.peek() == '=' {
 				r.consume(2, "rel")
@@ -127,6 +133,10 @@ func (r *reader) tokenize() {
 		}
 
 		if c == '=' {
+			if r.peek() == '>' {
+				r.consume(2, "arrow")
+				continue
+			}
 			r.consume(1, "eq")
 			continue
 		}

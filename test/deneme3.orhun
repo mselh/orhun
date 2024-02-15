@@ -5,6 +5,7 @@ yeni işlev çarp = (a tamsayı,b tamsayı) => tamsayı:
     c'yi döndür 
 .
 
+
 yeni işlev karesini_al = (a tamsayı) => tamsayı:
 
     yeni tamsayı c = a*a
@@ -22,18 +23,16 @@ yeni işlev rastgele_sayı_üret = () => tamsayı:
 giriş:
     yeni tamsayı a = 5
     yeni tamsayı b = 3
-    yeni tamsayı c = 0
-    yeni tamsayı d = 0
-    yeni tamsayı e = 0
-    yeni tamsayı f = 0
 
-    a'yı ve b'yi çarp => c
-    a'nın karesini_al => d
+    yeni tamsayı c = a'yı ve b'yi çarp
+    yeni tamsayı d = a'nın karesini_al 
 
-    rastgele_sayı_üret => e
+    yeni tamsayı e = rastgele_sayı_üret
 
-    yeni işlev üstünü_al = karesini_al
-    e'nin ve c'nin üstünü_al => f
-
-    c,d,e ve f'yi yazdır
+/*
+    yeni işlev üstünü_al = &karesini_al
+    yeni tamsayı f = e'nin ve c'nin üstünü_al 
+    f'yi yazdır
+*/
+    c'yi ve d'yi yazdır
 .

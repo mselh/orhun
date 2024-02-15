@@ -1,8 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
+
+// used for parsing a function
+type fnParamSignature struct {
+	name     string
+	typename string
+}
 
 type node struct {
 	val  string
@@ -17,6 +24,16 @@ type node struct {
 
 	// only used for "fnParams" node
 	fnParams []*node
+
+	// only used for fn signature
+	fnSignature    []fnParamSignature
+	returnTypename string
+
+	/*
+		// used for block node
+		// return node is a variable node
+		returnValNode *node
+	*/
 
 	// only used with if statement
 	ifNode *node
@@ -180,7 +197,7 @@ func (p *parser) parseExpr() *node {
 // parses new variables and new functions
 func (p *parser) parseNew() *node {
 	if p.tokenList[p.cur+3].val != "=" {
-		log.Fatal("bad new variable decl. @", p.cur)
+		log.Fatal("bad new variable decl. @", p.cur, p.now())
 		return nil
 	}
 
@@ -241,6 +258,17 @@ func (p *parser) parseVal() *node {
 		n.val = p.now().val
 		p.cur++ // skip word
 		//myPrintln("next:", p.now())
+		// VAR can be a function
+		// if VAR is defined to be a function before
+		// walk it as function and exec it
+		// while walking look for return typename
+		// check if it is same as newly defined var in left
+
+		// check for fn call
+		if p.now().kind == "ek" {
+			p.cur--
+			return p.parseFnCall()
+		}
 
 		// X VE|VEYA Y
 		if p.now().kind == "op" {
@@ -329,16 +357,11 @@ func (p *parser) parseAssign() *node {
 	return n
 }
 
-// parsing a function
-var fnParam struct {
-	name     string
-	typename string
-}
-
 // parses fn def
 func (p *parser) parseFnDef() *node {
 	n := new(node)
-	n.kind = "fn"
+	n.kind = "fnDefn"
+	n.fnSignature = make([]fnParamSignature, 0)
 
 	// look for ()
 	if p.now().val != "(" {
@@ -352,8 +375,38 @@ func (p *parser) parseFnDef() *node {
 		if p.cur >= len(p.tokenList) {
 			log.Fatalln("bad fn input defn. no ) after", start.line, start)
 		}
-
+		for p.now().val != "," {
+			fnp := fnParamSignature{
+				name:     p.now().val,
+				typename: p.peekN(1).val,
+			}
+			n.fnSignature = append(n.fnSignature, fnp)
+			p.cur += 2
+			fmt.Println("parseL", p.now())
+			if p.now().val != "," {
+				break
+			}
+			p.cur++ // skip comma
+		}
 	}
+	p.cur++ // skip )
+
+	// skip =>
+	if p.now().val != "=>" {
+		log.Fatalln("bad fn defn. waiting for =>", p.now().line, p.now())
+	}
+	p.cur++
+
+	n.returnTypename = p.now().val
+	// skip :\n
+	p.cur++
+	if p.now().val == "\n" {
+		p.cur++
+	}
+
+	// execBlock Node
+	n.left = p.parseBlock("fnBlock")
+	n.left.Print()
 
 	return n
 }
