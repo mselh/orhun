@@ -32,7 +32,8 @@ type Obj struct {
 
 type fn struct {
 	// if inherited from golang add a reference
-	GoRef func([]*val) []val
+	GoRef     func([]*val) []*val
+	rootScope *scope
 	// if orhun defined function add a reference to node
 	// so that the fnDef node is executed with the params
 	isParamsParametric bool
@@ -40,7 +41,7 @@ type fn struct {
 	defNode            *node // node to be executed
 }
 
-func (f *fn) exec(params []*val) ([]val, error) {
+func (f *fn) exec(params []*val) ([]*val, error) {
 
 	// check signature
 	// check if params is in same kind order as signature
@@ -62,11 +63,32 @@ func (f *fn) exec(params []*val) ([]val, error) {
 	}
 	// check done
 
-	// for now skip orhun defined functions
 	if f.GoRef != nil {
 		return f.GoRef(params), nil
 	}
-	return nil, nil
+
+	// exec fn block
+
+	// add parameters to local scope
+	fnScope := new(scope)
+	fnScope.localVars = make(map[string]*val)
+	fnScope.parent = f.rootScope
+	for i := range params {
+		p := params[i]
+		myPrintln("param", *p)
+		key := f.defNode.fnSignature[i]
+		fnScope.localVars[key.name] = p
+	}
+	myPrint("FN SCOPE:")
+	myPrintln(fnScope)
+
+	returnTypes := []string{f.defNode.returnTypename}
+	// walk block
+	vals := execBlockNode(f.defNode.left, fnScope, returnTypes)
+
+	// look for returned values
+
+	return vals, nil
 }
 
 type val struct {
@@ -104,7 +126,7 @@ func (p *program) walk() {
 		if n.kind != "new" {
 			log.Fatalln("unexpected exprs,", n.line, "only 'yeni' is allowed")
 		}
-		key, v := exec(n, p.rootScope)
+		key, v := exec(n, p.rootScope, make([]string, 0))
 		if searchVar(p.rootScope, key) != nil {
 			log.Fatalln("already defined key,", key)
 		}
@@ -118,14 +140,14 @@ func (p *program) walk() {
 	if p.rootNode.left == nil {
 		log.Fatalln("no entry node giris defined!")
 	}
-	execBlockNode(entryNode, p.rootScope)
+	execBlockNode(entryNode, p.rootScope, make([]string, 0))
 
 }
 
 // execs a node
 // if it s a new node, returns that new node
 // else only executes it.
-func exec(e *node, parentScope *scope) (def string, v *val) {
+func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 	if e.kind == "new" {
 		name := e.val // expression val is the name
 		v := new(val)
@@ -138,6 +160,7 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 				log.Fatal("waiting for fn def.")
 			}
 			f := new(fn)
+			f.rootScope = parentScope
 			f.signature = make([]val, 0)
 			for i := range e.right.fnSignature {
 				fns := e.right.fnSignature[i]
@@ -159,11 +182,29 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 			// a function call should return a single value now
 			// whether it is int, bool or a new function
 			// when implemented, also structs
+
+			// the below should change to multiple vals
+			// in future
 			if len(vals) > 0 {
 				v.intval = vals[0].intval
 			}
-			fmt.Println("fn call vals:", vals)
 			return name, v
+		} else {
+			// check if right is defined in scope as fn
+			v := searchVar(parentScope, e.right.val)
+			if v != nil && v.typeName == "fn" {
+				// new fn node is required to use execfnNode
+				fnNode := new(node)
+				fnNode.left = new(node)
+				fnNode.left.val = e.right.val
+				fnNode.right = v.funcVal.defNode
+				//v.funcVal.defNode.Print()
+				vals := execFnNode(fnNode, parentScope)
+				if len(vals) > 0 {
+					//v.intval = vals[0].intval
+				}
+				return name, vals[0]
+			}
 		}
 		// FN CALL
 
@@ -205,14 +246,14 @@ func exec(e *node, parentScope *scope) (def string, v *val) {
 	}
 
 	if e.kind == "if" {
-		execIfNode(e, parentScope)
+		execIfNode(e, parentScope, retval)
 		myPrintln(parentScope)
 		return "", nil
 	}
 
 	if e.kind == "while" {
 		myPrintln("entered while")
-		execWhileNode(e, parentScope)
+		execWhileNode(e, parentScope, retval)
 		myPrintln(parentScope)
 		return "", nil
 	}
@@ -318,7 +359,34 @@ func evalBoolValue(n *node, s *scope) bool {
 	return false
 }
 
-func execIfNode(n *node, s *scope) {
+func evalReturnVal(n *node, s *scope, returnTypes []string) []*val {
+	// node here is an fn node
+	if len(returnTypes) == 0 {
+		return make([]*val, 0)
+	}
+
+	retVals := make([]*val, 0)
+	for i := range n.right.fnParams {
+		n := n.right.fnParams[i]
+		n.Print()
+		v := new(val)
+
+		v.typeName = n.val
+		if returnTypes[i] == "önerme" {
+			v.boolVal = evalBoolValue(n, s)
+		} else if returnTypes[i] == "tamsayı" {
+			v.intval = evalIntValue(n, s)
+		} else {
+			log.Fatalln("ret val is not int or bool", returnTypes[i], n.line, n)
+		}
+		v.typeName = returnTypes[i]
+		retVals = append(retVals, v)
+	}
+
+	return retVals
+}
+
+func execIfNode(n *node, s *scope, retVal []string) {
 	// evaluate if expression
 	isTrue := evalBoolValue(n.ifNode, s)
 	blockNode := n.right
@@ -326,21 +394,21 @@ func execIfNode(n *node, s *scope) {
 		blockNode = n.left
 	}
 
-	execBlockNode(blockNode, s)
+	execBlockNode(blockNode, s, retVal)
 }
 
-func execWhileNode(n *node, s *scope) {
+func execWhileNode(n *node, s *scope, retVal []string) {
 	//eval if in every loop
 	for {
 		if !evalBoolValue(n.ifNode, s) {
 			break
 		}
 
-		execBlockNode(n.left, s)
+		execBlockNode(n.left, s, retVal)
 	}
 }
 
-func execFnNode(e *node, s *scope) []val {
+func execFnNode(e *node, s *scope) []*val {
 	// for some functions we will use golang fns
 	// for some it will execute the function that is defined
 	// for start, start with golang and builtin
@@ -370,14 +438,22 @@ func execFnNode(e *node, s *scope) []val {
 }
 
 // add return val, dondur function
-func execBlockNode(n *node, parentScope *scope) *val {
+func execBlockNode(n *node, parentScope *scope, retTypes []string) []*val {
 	blockScope := new(scope)
 	blockScope.parent = parentScope
 	blockScope.localVars = make(map[string]*val)
 	for i := range n.exprs {
 		e := n.exprs[i]
+
+		// check if exprs is a return expression
+		if e.kind == "fnCall" && e.left.val == "döndür" {
+			myPrintln("entered return")
+			retval := evalReturnVal(e, blockScope, retTypes)
+			return retval
+		}
+
 		// forgets children scopes after exec
-		def, val := exec(e, blockScope)
+		def, val := exec(e, blockScope, retTypes)
 		if def != "" {
 			blockScope.localVars[def] = val
 			myPrintln("added new def to scope :", def, *val, blockScope.localVars)
@@ -412,7 +488,7 @@ func searchVar(cur *scope, key string) *val {
 
 func addBuiltins(s *scope) {
 	printFn := new(fn)
-	printFn.GoRef = func(v []*val) []val {
+	printFn.GoRef = func(v []*val) []*val {
 		myPrintln("WRITE CALLED")
 		for i := range v {
 			fmt.Print(v[i].intval, " ")

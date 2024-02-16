@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -184,6 +183,10 @@ func (p *parser) parseExpr() *node {
 	if p.now().kind == "word" {
 		if p.peekN(1).val == "=" {
 			return p.parseAssign()
+		}
+		if p.now().val == "döndür" {
+			fnNode := p.parseFnCall()
+			fnNode.kind = "return"
 		}
 		return p.parseFnCall()
 	}
@@ -382,7 +385,6 @@ func (p *parser) parseFnDef() *node {
 			}
 			n.fnSignature = append(n.fnSignature, fnp)
 			p.cur += 2
-			fmt.Println("parseL", p.now())
 			if p.now().val != "," {
 				break
 			}
@@ -406,7 +408,7 @@ func (p *parser) parseFnDef() *node {
 
 	// execBlock Node
 	n.left = p.parseBlock("fnBlock")
-	n.left.Print()
+	//n.left.Print()
 
 	return n
 }
@@ -431,7 +433,7 @@ func (p *parser) parseFnCall() *node {
 
 		// add fn params
 		pn := new(node)
-		pn.kind = "var"
+		pn.kind = "VAR"
 		pn.val = p.peekN(fnStart).val
 
 		n.right.fnParams = append(n.right.fnParams, pn)

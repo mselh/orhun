@@ -21,14 +21,19 @@ yeni işlev rastgele_sayı_üret = () => tamsayı:
 .
 
 giriş:
+    yeni tamsayı e = rastgele_sayı_üret
+    e'yi yazdır
+
     yeni tamsayı a = 5
     yeni tamsayı b = 3
 
     yeni tamsayı c = a'yı ve b'yi çarp
+
+    c'yi yazdır
     yeni tamsayı d = a'nın karesini_al 
+    d'yi yazdır
 
-    yeni tamsayı e = rastgele_sayı_üret
-
+    
 /*
     yeni işlev üstünü_al = &karesini_al
     yeni tamsayı f = e'nin ve c'nin üstünü_al 
