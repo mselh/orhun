@@ -46,9 +46,6 @@ giriş:
 
 ## Yardım istenen birtakım mevzular
 
-Fonksiyonların syntax i nasıl olmalı biraz düşünmem lazım.
-Fikriniz varsa lütfen issue kısmında belirtmenizi rica ederim.
-
 Test Programlarına ihtiyacımız var.
 
 Genel anlamda, her türlü yardım hoşgörülür.
@@ -61,11 +58,20 @@ harmankaya@mshyazilim.com
 
 MIT Lisansı
 
-## v0.1 Hedefleri:
+## Hedefler:
+
+#### v0.1:
 globalde ve yerelde fonksiyon ve degisken tanimlari
-struct/ozne/yapi tanimlamalari
 
-sonraki hedefler?
-Modul destegi ve syntaxi
+struct/ozne/yapi'ların eklenmesi.
 
-LLVM 
+#### v0.2:
+
+Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
+
+karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
+
+Modul desteği
+
+#### Ötesi:
+Sözdizimi ile ilgili fikirler oturduktan sonra, Orhunu derlenen bir dile dönüştürmek 

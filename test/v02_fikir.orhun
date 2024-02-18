@@ -1,0 +1,20 @@
+yeni yapı öğrenci:
+    ad: metin
+    boy: tamsayı
+    ders_notları: tamsayı dizisi
+.
+
+giriş:
+
+    yeni öğrenci ali
+    
+    ali'nin boy'u = 190
+    ali'nin ad'i = "ali"
+
+    veli := yeni öğrenci:
+        boy: 190
+        ad: "Veli"
+    .
+
+    ali'yi ve veli'yi yazdır
+.
