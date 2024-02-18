@@ -92,7 +92,7 @@ func (f *fn) exec(params []*val) ([]*val, error) {
 }
 
 type val struct {
-	// int,string,object
+	// int,string,struct,fn
 	typeName string
 	// if int
 	intval int
@@ -100,8 +100,8 @@ type val struct {
 	strval string
 	// if bool
 	boolVal bool
-	// if ozne, meaning object, object reference
-	objVal Obj
+	// if yapi, meaning struct
+	objVal *Obj
 	// if val of type fn, it means function
 	funcVal *fn
 }
@@ -123,16 +123,33 @@ func (p *program) walk() {
 	// add global declaratins to root scope
 	for i := range p.rootNode.exprs {
 		n := p.rootNode.exprs[i]
-		if n.kind != "new" {
-			log.Fatalln("unexpected exprs,", n.line, "only 'yeni' is allowed")
+
+		if n.kind != "new" && n.kind != "yapı" {
+			log.Fatalln("unexpected exprs,", n, n.line, "only 'yeni' is allowed")
 		}
-		key, v := exec(n, p.rootScope, make([]string, 0))
-		if searchVar(p.rootScope, key) != nil {
-			log.Fatalln("already defined key,", key)
+
+		if n.kind == "new" {
+
+			key, v := exec(n, p.rootScope, make([]string, 0))
+			if searchVar(p.rootScope, key) != nil {
+				log.Fatalln("already defined key,", key)
+			}
+			p.rootScope.localVars[key] = v
 		}
-		p.rootScope.localVars[key] = v
+
+		if n.kind == "yapı" {
+			key, v := exec(n, p.rootScope, make([]string, 0))
+			if searchVar(p.rootScope, key) != nil {
+				log.Fatalln("already defined key,", key)
+			}
+			p.rootScope.localVars[key] = v
+			fmt.Println("new yapi with fields", v.objVal.keys)
+		}
+
 	} // TODO: evaluate them later if right side includes a variable
 	// you also need to detect recursive declarations etc. too much work for now
+	// for now global declatrations are top-down
+
 	myPrintln("GLOBAL SCOPE:", p.rootScope)
 
 	// start from entry
@@ -148,6 +165,24 @@ func (p *program) walk() {
 // if it s a new node, returns that new node
 // else only executes it.
 func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
+
+	if e.kind == "yapı" {
+		fmt.Println("ypai val:", e.val)
+		name := e.val
+		v := new(val)
+		v.typeName = "yapıDefn"
+		v.objVal = new(Obj)
+		v.objVal.name = name
+		v.objVal.keys = make(map[string]*val)
+		for i := range e.fnSignature {
+			defn := e.fnSignature[i]
+			val := new(val)
+			val.typeName = defn.typename
+			v.objVal.keys[defn.name] = val
+		}
+		return name, v
+	}
+
 	if e.kind == "new" {
 		name := e.val // expression val is the name
 		v := new(val)
@@ -172,6 +207,37 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 			f.defNode = e.right
 			v.typeName = "fn"
 			v.funcVal = f
+		}
+
+		// not initialized var with no right side
+		if e.right == nil {
+			// search for the key
+			if searchVar(parentScope, name) != nil {
+				log.Fatalln("already defined new:", name, e.line)
+			}
+			// check the typename and return with empty vals:
+			zeroed := new(val)
+			if v.typeName == "tamsayı" || v.typeName == "önerme" {
+				zeroed.typeName = v.typeName
+			}
+			// else check if it matched a defined struct type
+			defnVal := searchVar(parentScope, v.typeName)
+			if defnVal == nil {
+				log.Fatalln("undefined typename:", v.typeName, e.line)
+			}
+			if defnVal.typeName != "yapıDefn" {
+				log.Fatalln("not a defined struct typename:", v.typeName, e.line)
+			}
+			// create a new instance from defn
+			zeroed.typeName = "yapı"
+			zeroed.objVal = new(Obj)
+			zeroed.objVal.name = defnVal.objVal.name
+			zeroed.objVal.keys = make(map[string]*val)
+			for k, v := range defnVal.objVal.keys {
+				zeroed.objVal.keys[k] = new(val)
+				zeroed.objVal.keys[k].typeName = v.typeName
+			}
+			return name, zeroed
 		}
 
 		// FN CALL
@@ -218,6 +284,7 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 		myPrintln("new var:", e.left.val)
 		return name, v
 	}
+
 	if e.kind == "assign" {
 		// search for the var in local scope
 		// ifndef, go for upper scope

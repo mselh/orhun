@@ -71,6 +71,10 @@ Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
 
 karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
 
+#### v0.3:
+
+UTF-8 stringleri
+
 Modul desteği
 
 #### Ötesi:

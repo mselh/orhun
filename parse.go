@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -24,7 +25,8 @@ type node struct {
 	// only used for "fnParams" node
 	fnParams []*node
 
-	// only used for fn signature
+	// used for fn signature
+	// fn sign also used for structs
 	fnSignature    []fnParamSignature
 	returnTypename string
 
@@ -96,6 +98,16 @@ func (p *parser) parseAll() {
 
 		if t.kind == "nl" {
 			p.cur++
+			continue
+		}
+
+		// a struct defn
+		if t.val == "yapı" {
+			nstruct := p.ParseStructDefn()
+			if nstruct == nil {
+				log.Fatalln("err while parsing struct defn", t.line)
+			}
+			p.root.exprs = append(p.root.exprs, nstruct)
 			continue
 		}
 
@@ -181,13 +193,24 @@ func (p *parser) parseExpr() *node {
 	// for, [v'[postfix]]? [inscope function]
 	// evaluate
 	if p.now().kind == "word" {
+		fmt.Println(p.now())
 		if p.peekN(1).val == "=" {
 			return p.parseAssign()
 		}
 		if p.now().val == "döndür" {
 			fnNode := p.parseFnCall()
 			fnNode.kind = "return"
+			return fnNode
 		}
+		// a way to reach a structs variable
+		if p.peekN(1).kind == "ek" &&
+			p.peekN(2).kind == "word" &&
+			p.peekN(3).kind == "ek" {
+
+			return p.parseFieldAssign()
+		}
+
+		// else an fn call
 		return p.parseFnCall()
 	}
 
@@ -196,24 +219,44 @@ func (p *parser) parseExpr() *node {
 	return nil
 }
 
+func (p *parser) ParseStructDefn() *node {
+	if p.peekN(2).val != ":" {
+		log.Fatalln("bad struct defn. @", p.cur, p.now())
+	}
+	n := new(node)
+	n.val = p.peekN(1).val
+	n.kind = "yapı"
+
+	p.cur += 3
+	// skip new line
+	p.cur++
+	for p.now().val != "." {
+		name := p.now().val
+		if p.peekN(1).val != ":" {
+			log.Fatalln("bad str def", p.cur, p.now())
+		}
+		valtype := p.peekN(2).val
+		if p.peekN(3).val == "dizisi" {
+			log.Fatalln("arrays are not yet implemented")
+		}
+		sign := fnParamSignature{
+			name:     name,
+			typename: valtype,
+		}
+		n.fnSignature = append(n.fnSignature, sign)
+		// skip line and new line
+		p.cur += 4
+	}
+	p.cur++ // skip last dot
+	return n
+}
+
 // the subexpr parsers returns node, one hould at them to root
 // parses new variables and new functions
 func (p *parser) parseNew() *node {
-	if p.tokenList[p.cur+3].val != "=" {
-		log.Fatal("bad new variable decl. @", p.cur, p.now())
-		return nil
-	}
-
 	varname := p.tokenList[p.cur+2]
 	typename := p.tokenList[p.cur+1]
-
-	p.cur = p.cur + 4
-	var value *node
-	if typename.kind != "fn" {
-		value = p.parseVal()
-	} else {
-		value = p.parseFnDef()
-	}
+	p.cur = p.cur + 3
 
 	n := new(node)
 	n.kind = "new"
@@ -221,6 +264,26 @@ func (p *parser) parseNew() *node {
 	// bence deger ve tipi tutulmali,
 	// sonra tip ve atamayi karsilastirmak gerekebilir
 	// nizami olmasini kontrol etmek isteyebiliriz.
+	var value *node
+
+	// it is not initialised, default values are used for each type
+	if p.now().val != "=" {
+
+		if p.now().kind != "nl" {
+			log.Fatal("bad new variable decl. @", p.cur, p.now())
+		}
+		value = nil
+
+	} else {
+		// skip =
+		p.cur++
+
+		if typename.kind != "fn" {
+			value = p.parseVal()
+		} else {
+			value = p.parseFnDef()
+		}
+	}
 
 	n.left = new(node)
 	n.left.kind = "typeName"
@@ -228,6 +291,9 @@ func (p *parser) parseNew() *node {
 
 	n.right = value
 	// while traversing tree, one should eval this
+
+	fmt.Println("and of parse", p.now())
+
 	return n
 }
 
@@ -358,6 +424,32 @@ func (p *parser) parseAssign() *node {
 	n.right = p.parseVal()
 
 	return n
+}
+
+func (p *parser) parseFieldAssign() *node {
+	root := new(node)
+	root.kind = "fieldAssign"
+	root.val = p.now().val
+	// the name of the struct that holds the field
+	p.cur += 2
+
+	// remaining is word'ek = VAL
+	if p.peekN(2).val != "=" {
+		log.Fatal("not a valid assignment:", p.now())
+	}
+
+	n := new(node)
+	n.kind = "assign"
+
+	n.left = new(node)
+	n.left.kind = "var"
+	n.left.val = p.now().val
+
+	p.cur += 3
+	n.right = p.parseVal()
+
+	root.left = n
+	return root
 }
 
 // parses fn def

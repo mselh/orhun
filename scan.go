@@ -75,6 +75,10 @@ func (r *reader) tokenize() {
 				r.consume(n, "fn")
 				continue
 			}
+			if w := string(r.text[r.cur : r.cur+n]); w == "yapı" {
+				r.consume(n, "yapı")
+				continue
+			}
 			r.consume(n, "word")
 			continue
 		}
