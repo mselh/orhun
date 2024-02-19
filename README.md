@@ -77,5 +77,7 @@ UTF-8 stringleri
 
 Modul desteği
 
+### v0.4 gramer'in,parser'in ve walk'in bastan sona tekrardan ele alinmasi
+
 #### Ötesi:
 Sözdizimi ile ilgili fikirler oturduktan sonra, Orhunu derlenen bir dile dönüştürmek 
