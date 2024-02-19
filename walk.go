@@ -57,7 +57,7 @@ func (f *fn) exec(params []*val) ([]*val, error) {
 
 	for i := range f.signature {
 		sv := f.signature[i]
-		if sv.typeName != params[i].typeName {
+		if sv.typeName != "" && sv.typeName != params[i].typeName {
 			return nil, fmt.Errorf("bad func parameter")
 		}
 	}
@@ -143,7 +143,7 @@ func (p *program) walk() {
 				log.Fatalln("already defined key,", key)
 			}
 			p.rootScope.localVars[key] = v
-			fmt.Println("new yapi with fields", v.objVal.keys)
+			myPrintln("new yapi with fields", v.objVal.keys)
 		}
 
 	} // TODO: evaluate them later if right side includes a variable
@@ -167,7 +167,7 @@ func (p *program) walk() {
 func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 
 	if e.kind == "yapı" {
-		fmt.Println("ypai val:", e.val)
+		myPrintln("ypai val:", e.val)
 		name := e.val
 		v := new(val)
 		v.typeName = "yapıDefn"
@@ -285,6 +285,27 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 		return name, v
 	}
 
+	if e.kind == "fieldAssign" {
+		// first find the struct var
+		v := searchVar(parentScope, e.val)
+		if v == nil {
+			log.Fatalln("cant assign to not defined struct", e.val)
+		}
+
+		fieldName := e.left.left.val
+
+		// assign according to the type
+		fieldType := v.objVal.keys[fieldName].typeName
+		if fieldType == "tamsayı" {
+			v.objVal.keys[fieldName].intval = evalIntValue(e.left.right, parentScope)
+		}
+		if fieldName == "önerme" {
+			v.objVal.keys[fieldName].boolVal = evalBoolValue(e.left.right, parentScope)
+		}
+		return "", nil
+
+	}
+
 	if e.kind == "assign" {
 		// search for the var in local scope
 		// ifndef, go for upper scope
@@ -366,6 +387,25 @@ func evalIntValue(n *node, s *scope) int {
 		if n.val == "-" {
 			return leftval - rightval
 		}
+	}
+
+	if n.kind == "FIELD" {
+		myPrintln("evaling FIELD node as int,", n.line, n)
+		v := searchVar(s, n.val)
+		if v == nil {
+			log.Fatalln("cant find var", n.val, n.line)
+		}
+		fieldname := n.left.val
+		fieldval, found := v.objVal.keys[fieldname]
+		if !found {
+			log.Fatalln("cant find field at struct", n.val, n.line)
+		}
+		if fieldval.typeName != "tamsayı" {
+			log.Fatalln("field is not an integer:", fieldname, n.line)
+		}
+		intval := fieldval.intval
+
+		return intval
 	}
 
 	log.Fatal("can't walk node at", n.line, n)
@@ -558,14 +598,23 @@ func addBuiltins(s *scope) {
 	printFn.GoRef = func(v []*val) []*val {
 		myPrintln("WRITE CALLED")
 		for i := range v {
-			fmt.Print(v[i].intval, " ")
+
+			switch v[i].typeName {
+			case "tamsayı":
+				fmt.Print(v[i].intval, " ")
+			case "yapı":
+				fmt.Println("yapı:", v[i].objVal.name)
+				for k, val := range v[i].objVal.keys {
+					fmt.Println(k, *val)
+				}
+			}
 		}
 		fmt.Println()
 		myPrintln("\nWRITE FINISHED")
 		return nil
 	}
 	printFn.isParamsParametric = true
-	printFn.signature = []val{{typeName: "tamsayı"}}
+	printFn.signature = []val{{typeName: ""}}
 
 	printFnVal := new(val)
 	printFnVal.typeName = "fn"

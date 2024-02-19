@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -193,7 +192,7 @@ func (p *parser) parseExpr() *node {
 	// for, [v'[postfix]]? [inscope function]
 	// evaluate
 	if p.now().kind == "word" {
-		fmt.Println(p.now())
+		myPrintln(p.now())
 		if p.peekN(1).val == "=" {
 			return p.parseAssign()
 		}
@@ -203,9 +202,11 @@ func (p *parser) parseExpr() *node {
 			return fnNode
 		}
 		// a way to reach a structs variable
+		// check for =
 		if p.peekN(1).kind == "ek" &&
 			p.peekN(2).kind == "word" &&
-			p.peekN(3).kind == "ek" {
+			p.peekN(3).kind == "ek" &&
+			p.peekN(4).val == "=" {
 
 			return p.parseFieldAssign()
 		}
@@ -215,7 +216,8 @@ func (p *parser) parseExpr() *node {
 	}
 
 	// if nothing is matched give an error
-	log.Fatal("expression is unkown at:", p.cur, p.now().val, "val", []rune(p.now().val))
+	p.root.Print()
+	log.Fatal("expression is unkown at:", p.now().line, p.cur, p.now().val, "val", []rune(p.now().val))
 	return nil
 }
 
@@ -292,7 +294,7 @@ func (p *parser) parseNew() *node {
 	n.right = value
 	// while traversing tree, one should eval this
 
-	fmt.Println("and of parse", p.now())
+	myPrintln("and of parse", p.now())
 
 	return n
 }
@@ -332,6 +334,21 @@ func (p *parser) parseVal() *node {
 		// walk it as function and exec it
 		// while walking look for return typename
 		// check if it is same as newly defined var in left
+
+		// check if a struct field
+		// ali'nin boy'u
+		if p.now().kind == "ek" && p.peekN(1).kind == "word" && p.peekN(2).kind == "ek" {
+			n.kind = "FIELD"
+			p.cur++ // skip 'ek
+
+			f := new(node)
+			f.kind = "VAR"
+			f.val = p.now().val
+			// skip word'ek
+			p.cur += 2
+
+			n.left = f
+		}
 
 		// check for fn call
 		if p.now().kind == "ek" {

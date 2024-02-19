@@ -1,0 +1,4 @@
+yapı: öğrenci
+ad {tamsayı 20  false <nil> <nil>}
+boy {tamsayı 190  false <nil> <nil>}
+

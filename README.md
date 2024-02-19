@@ -61,9 +61,9 @@ MIT Lisansı
 ## Hedefler:
 
 #### v0.1:
-globalde ve yerelde fonksiyon ve degisken tanimlari
+globalde ve yerelde fonksiyon ve degisken tanimlari +
 
-struct/ozne/yapi'ların eklenmesi.
+struct/ozne/yapi'ların eklenmesi. +
 
 #### v0.2:
 

@@ -8,7 +8,7 @@ giriş:
     yeni öğrenci ali
     ali'nin boy'u = 190
     ali'nin ad'i = 20
-     
-    ali'yi yazdır
+    yeni tamsayı b = ali'nin boy'u * 2
 
+    b'yi yazdır
 .
