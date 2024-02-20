@@ -196,6 +196,9 @@ func (p *parser) parseExpr() *node {
 		if p.peekN(1).val == "=" {
 			return p.parseAssign()
 		}
+		if p.peekN(1).val == ":=" {
+			return p.parseNewAssign()
+		}
 		if p.now().val == "döndür" {
 			fnNode := p.parseFnCall()
 			fnNode.kind = "return"
@@ -250,6 +253,31 @@ func (p *parser) ParseStructDefn() *node {
 		p.cur += 4
 	}
 	p.cur++ // skip last dot
+	return n
+}
+
+// refer type by right side as much as possible
+func (p *parser) parseNewAssign() *node {
+	n := new(node)
+	n.kind = "new"
+	n.val = p.now().val
+
+	// infer type name from right side
+	typename := ""
+
+	// skip word
+	p.cur++
+	// skip ":="
+	p.cur++
+
+	value := p.parseVal()
+
+	n.left = new(node)
+	n.left.kind = "typeName"
+	n.left.val = typename
+
+	n.right = value
+
 	return n
 }
 

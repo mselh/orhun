@@ -95,6 +95,10 @@ func (r *reader) tokenize() {
 
 		// is punct?
 		if c == ':' {
+			if r.peek() == '=' {
+				r.consume(2, "newAssign")
+				continue
+			}
 			r.consume(1, ":")
 			continue
 		}
