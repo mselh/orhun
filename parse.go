@@ -259,7 +259,7 @@ func (p *parser) ParseStructDefn() *node {
 // refer type by right side as much as possible
 func (p *parser) parseNewAssign() *node {
 	n := new(node)
-	n.kind = "new"
+	n.kind = "newAssign"
 	n.val = p.now().val
 
 	// infer type name from right side
@@ -340,10 +340,8 @@ func (p *parser) parseVal() *node {
 
 	// parantheses
 	if p.now().val == "(" {
-		n := new(node)
-		n.kind = "PAR"
 		p.cur++
-		n.left = p.parseVal()
+		n := p.parseVal()
 		if p.now().val != ")" {
 			log.Fatal("unclosed paranthesis", p.now())
 		}

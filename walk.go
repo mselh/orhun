@@ -183,6 +183,63 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 		return name, v
 	}
 
+	// below is := style declerations
+	// type assignment is done by looking at right side
+	// fn defns are not implemented for := operator
+
+	if e.kind == "newAssign" {
+		name := e.val
+
+		if e.right.kind == "fnCall" {
+			vals := execFnNode(e.right, parentScope)
+			return name, vals[0]
+		} else {
+			v := searchVar(parentScope, e.right.val)
+			if v != nil && v.typeName == "fn" {
+				fnNode := new(node)
+				fnNode.left = new(node)
+				fnNode.left.val = e.right.val
+				fnNode.right = v.funcVal.defNode
+				vals := execFnNode(fnNode, parentScope)
+				return name, vals[0]
+			}
+		}
+
+		if e.right.kind == "OP" {
+			v := new(val)
+			v.typeName = "önerme"
+			v.boolVal = evalBoolValue(e.right, parentScope)
+			return name, v
+		}
+
+		if e.right.kind == "VAR" {
+			v1 := searchVar(parentScope, e.right.val)
+			if v == nil {
+				log.Fatalln("undefined VAR", e.right, e.line)
+			}
+			v2 := new(val)
+			v2.typeName = v1.typeName
+			v2.intval = v1.intval
+			v2.boolVal = v1.boolVal
+			v2.objVal = v1.objVal
+			return name, v2
+		}
+
+		if e.right.kind == "REL" {
+
+		}
+
+		if e.right.kind == "FIELD" {
+
+		}
+
+		if e.right.kind == "AR" {
+			v := new(val)
+			v.typeName = "tamsayı"
+		}
+
+	}
+
 	if e.kind == "new" {
 		name := e.val // expression val is the name
 		v := new(val)

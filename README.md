@@ -69,6 +69,8 @@ struct/ozne/yapi'ların eklenmesi. +
 
 Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
 
+...  semantic analize gerek var
+
 karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
 
 #### v0.3:
