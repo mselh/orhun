@@ -1,0 +1,12 @@
+yapı öğrenci:
+    ad: metin
+    boy: tamsayı
+.
+
+
+giriş:
+    yeni öğrenci ali
+    ali'nin ad'ı = "enver"
+    ali'nin boy'u = 180
+    ali'yi yazdır.
+.

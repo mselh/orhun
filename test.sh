@@ -6,3 +6,4 @@ cat test/deneme3.orhun | go run ./... | diff -q test/deneme3.orhun.test -
 cat test/deneme4.orhun | go run ./... | diff -q test/deneme4.orhun.test -
 cat test/deneme5.orhun | go run ./... | diff -q test/deneme5.orhun.test -
 cat test/deneme6.orhun | go run ./... | diff -q test/deneme6.orhun.test -
+cat test/deneme7.orhun | go run ./... | diff -q test/deneme7.orhun.test -

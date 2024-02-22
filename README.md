@@ -73,15 +73,15 @@ Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
 
 ... v0.4 de iki aşamalı lexer ve parser/semantic analiz sonrası gözden geçirilecek.
 
+string destegi [+]
+
 karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
 
-#### v0.3:
-
-UTF-8 stringleri
-
-Modul desteği
 
 ### v0.4 gramer'in,parser'in ve walk'in bastan sona tekrardan ele alinmasi
 
 #### Ötesi:
+
+Modul destegi-birim
+
 Sözdizimi ile ilgili fikirler oturduktan sonra, Orhunu derlenen bir dile dönüştürmek 

@@ -380,8 +380,11 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 		if fieldType == "tamsayı" {
 			v.objVal.keys[fieldName].intval = evalIntValue(e.left.right, parentScope)
 		}
-		if fieldName == "önerme" {
+		if fieldType == "önerme" {
 			v.objVal.keys[fieldName].boolVal = evalBoolValue(e.left.right, parentScope)
+		}
+		if fieldType == "metin" {
+			v.objVal.keys[fieldName].strval = e.left.right.val
 		}
 		return "", nil
 

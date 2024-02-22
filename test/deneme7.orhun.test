@@ -1,0 +1,4 @@
+yapı: öğrenci
+boy {tamsayı 180  false <nil> <nil>}
+ad {metin 0 "enver" false <nil> <nil>}
+
