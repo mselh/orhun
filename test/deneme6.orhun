@@ -2,12 +2,7 @@ giriş:
     a := 4
     e := yanlış
     a'yı ve e'yi yazdır
-/*
+
     b := "enver"
     b'yi yazdır.
-
-    c := "ismail"
-    d := b + c
-    d'yi yazdır
-*/
 .

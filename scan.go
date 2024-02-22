@@ -83,6 +83,17 @@ func (r *reader) tokenize() {
 			continue
 		}
 
+		// is string
+		if c == '"' {
+			n := 1 // skip first
+			for r.peekN(n) != '"' {
+				n++
+			}
+			n++ // skip last "
+			r.consume(n, "string")
+			continue
+		}
+
 		// is no?
 		if unicode.IsDigit(c) {
 			// read till the end

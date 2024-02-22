@@ -69,7 +69,9 @@ struct/ozne/yapi'ların eklenmesi. +
 
 Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
 
-...  semantic analize gerek var
+...  semantic analize gerek var, olduğu kadar yapıldı.
+
+... v0.4 de iki aşamalı lexer ve parser/semantic analiz sonrası gözden geçirilecek.
 
 karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
 

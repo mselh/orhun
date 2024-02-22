@@ -328,7 +328,7 @@ func (p *parser) parseNew() *node {
 }
 
 // what is val?
-// either be int or bool for now
+// either be int or bool or string for now
 // single constant number/integer
 // or math arithmetic
 // SAYI: SAYI
@@ -345,6 +345,14 @@ func (p *parser) parseVal() *node {
 		if p.now().val != ")" {
 			log.Fatal("unclosed paranthesis", p.now())
 		}
+		p.cur++
+		return n
+	}
+
+	if p.peekN(0).kind == "string" {
+		n := new(node)
+		n.kind = "STRING"
+		n.val = p.now().val
 		p.cur++
 		return n
 	}

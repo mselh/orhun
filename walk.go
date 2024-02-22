@@ -186,10 +186,8 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 	// below is := style declerations
 	// type assignment is done by looking at right side
 	// fn defns are not implemented for := operator
-
 	if e.kind == "newAssign" {
 		name := e.val
-
 		if e.right.kind == "fnCall" {
 			vals := execFnNode(e.right, parentScope)
 			return name, vals[0]
@@ -226,16 +224,45 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 		}
 
 		if e.right.kind == "REL" {
-
+			v := new(val)
+			v.typeName = "önerme"
+			v.boolVal = evalBoolValue(e.right, parentScope)
+			return name, v
 		}
 
 		if e.right.kind == "FIELD" {
-
+			// get defined object
+			log.Fatalln("not yet implemented")
+			// then get the field
+			// then return the fields value
 		}
 
 		if e.right.kind == "AR" {
 			v := new(val)
 			v.typeName = "tamsayı"
+			v.intval = evalIntValue(e.right, parentScope)
+			return name, v
+		}
+
+		if e.right.kind == "NUM" {
+			v := new(val)
+			v.typeName = "tamsayı"
+			v.intval = evalIntValue(e.right, parentScope)
+			return name, v
+		}
+
+		if e.right.kind == "BOOL" {
+			v := new(val)
+			v.typeName = "önerme"
+			v.boolVal = evalBoolValue(e.right, parentScope)
+			return name, v
+		}
+
+		if e.right.kind == "STRING" {
+			v := new(val)
+			v.typeName = "metin"
+			v.strval = e.right.val
+			return name, v
 		}
 
 	}
@@ -323,9 +350,6 @@ func exec(e *node, parentScope *scope, retval []string) (def string, v *val) {
 				fnNode.right = v.funcVal.defNode
 				//v.funcVal.defNode.Print()
 				vals := execFnNode(fnNode, parentScope)
-				if len(vals) > 0 {
-					//v.intval = vals[0].intval
-				}
 				return name, vals[0]
 			}
 		}
@@ -664,6 +688,8 @@ func addBuiltins(s *scope) {
 				for k, val := range v[i].objVal.keys {
 					fmt.Println(k, *val)
 				}
+			case "metin":
+				fmt.Print("metin:", v[i].strval)
 			}
 		}
 		fmt.Println()
