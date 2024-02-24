@@ -75,13 +75,16 @@ Go tarzı ":=" tanımları ile sözdiziminde basitleşmeye gitmek istiyorum.
 
 string destegi [+]
 
-karakter/byte/uint8, float ve dizi veri tiplerinin desteklenmesi.
 
 
-### v0.4 gramer'in,parser'in ve walk'in bastan sona tekrardan ele alinmasi
+### v0.3 gramer'in,parser'in ve walk'in bastan sona tekrardan ele alinmasi
 
 #### Ötesi:
 
 Modul destegi-birim
+
+uint8 ve float destegi
+
+dizi veri tiplerinin desteklenmesi.
 
 Sözdizimi ile ilgili fikirler oturduktan sonra, Orhunu derlenen bir dile dönüştürmek 

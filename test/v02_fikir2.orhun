@@ -1,0 +1,17 @@
+yapı öğrenci:
+    ad: metin
+.
+
+giriş:
+    ders_notları := [4,5]
+    dersler := ["matematik", "türkçe"]
+
+    ali := yeni öğrenci
+    ali'nin adı = "ali"
+
+    öğrenciler := []öğrenci // bu gösterim zorunlu durumlar için
+    öğrenciler'e ali'yi ekle
+
+    veliler := [] // eklenen ilk eklenen elemana göre türü belirlenir.
+    veliler'e ali'yi ekle // bu aşamada veliler öğrenci tipi oaralak aloke
+.
